@@ -16,7 +16,7 @@
 <br /><br />
 
 ## 🛠️ 기술 스택 
-[![My Skills](https://skillicons.dev/icons?i=nuxt,vue,tailwind,supabase,cloudflare,githubactions&theme=light)](https://skillicons.dev)
+[![My Skills](https://skillicons.dev/icons?i=nuxt,vue,tailwind,supabase,cloudflare,githubactions&theme=light)]
 
 ### 💰 최고의 성능과 최소한의 비용
 **Supabase**와 **Cloudflare Pages**의 강력한 무료 플랜을 활용해서 개발 초기 단계 및 일정 규모 이하의 서비스 운영에 추가 비용이 거의 발생하지 않도록 설계했어요.
