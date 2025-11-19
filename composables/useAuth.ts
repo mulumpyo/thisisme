@@ -7,7 +7,7 @@ export const useAuth = () => {
 
   const redirectTo = import.meta.dev
     ? 'http://localhost:3000/auth/callback'
-    : 'https://mulumpyo.com/auth/callback';
+    : 'https://thisisme.cloud/auth/callback';
 
   const signInWithGithub = async () => {
     if (!supabase) return;
