@@ -119,19 +119,12 @@ const handleLogout = async () => {
   router.replace('/');
 };
 
-const handleNavigateToUserProfile = () => {
-  if (currentUser.value?.name) {
-    router.push(`/${currentUser.value.name}`);
-  } else {
-    router.push('/');
-  }
-};
 </script>
 
 <template>
   <Sidebar v-bind="props">
     <SidebarHeader>
-      <Logo @navigate-to-user-profile="handleNavigateToUserProfile" />
+      <Logo />
     </SidebarHeader>
 
     <SidebarContent>

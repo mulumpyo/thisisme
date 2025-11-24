@@ -18,15 +18,15 @@ useHead({
     { name: 'description', content: `${username}님의 포트폴리오입니다.` },
     
     // Facebook / Kakao
-    { property: 'og:title', content: `@${username} - thisisme` },
-    { property: 'og:description', content: `${username}님의 포트폴리오입니다.` },
+    { property: 'og:title', content: `@${username} : thisisme` },
+    { property: 'og:description', content: `쉽게 만들고 쉽게 공유하는 나만의 포트폴리오` },
     { property: 'og:type', content: 'website' },
     { property: 'og:image', content: '/og-image.png' },
     
     // Twitter
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: `@${username} - thisisme` },
-    { name: 'twitter:description', content: `${username}님의 포트폴리오입니다.` },
+    { name: 'twitter:title', content: `@${username} : thisisme` },
+    { name: 'twitter:description', content: `쉽게 만들고 쉽게 공유하는 나만의 포트폴리오` },
     { name: 'twitter:image', content: '/og-image.png' }
   ]
 });

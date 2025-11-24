@@ -9,14 +9,14 @@ useHead({
     { name: 'description', content: '나만의 포트폴리오를 빠르게 만들고 SNS에서 공유하세요!' },
     
     // Facebook / Kakao
-    { property: 'og:title', content: 'thisisme – 나만의 포트폴리오 공유 플랫폼' },
+    { property: 'og:title', content: 'thisisme' },
     { property: 'og:description', content: '쉽게 만들고 쉽게 공유하는 나만의 포트폴리오' },
     { property: 'og:type', content: 'website' },
     { property: 'og:image', content: '/og-image.png' },
     
     // Twitter
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'thisisme – 나만의 포트폴리오 공유 플랫폼' },
+    { name: 'twitter:title', content: '나만의 포트폴리오 공유 플랫폼' },
     { name: 'twitter:description', content: '쉽게 만들고 쉽게 공유하는 나만의 포트폴리오' },
     { name: 'twitter:image', content: '/og-image.png' }
   ]
@@ -35,7 +35,7 @@ const handleLogin = async () => {
 
 definePageMeta({
   layout: 'page',
-  middleware: 'redirect',
+  middleware: 'auth',
 });
 </script>
 
