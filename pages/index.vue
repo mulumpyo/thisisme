@@ -12,13 +12,13 @@ useHead({
     { property: 'og:title', content: 'thisisme – 나만의 포트폴리오 공유 플랫폼' },
     { property: 'og:description', content: '쉽게 만들고 쉽게 공유하는 나만의 포트폴리오' },
     { property: 'og:type', content: 'website' },
-    // { property: 'og:image', content: '/og-image.png' },
+    { property: 'og:image', content: '/og-image.png' },
     
     // Twitter
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'thisisme – 나만의 포트폴리오 공유 플랫폼' },
     { name: 'twitter:description', content: '쉽게 만들고 쉽게 공유하는 나만의 포트폴리오' },
-    // { name: 'twitter:image', content: '/og-image.png' }
+    { name: 'twitter:image', content: '/og-image.png' }
   ]
 });
 

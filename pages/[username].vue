@@ -21,13 +21,13 @@ useHead({
     { property: 'og:title', content: `@${username} - thisisme` },
     { property: 'og:description', content: `${username}님의 포트폴리오입니다.` },
     { property: 'og:type', content: 'website' },
-    // { property: 'og:image', content: '/og-image.png' },
+    { property: 'og:image', content: '/og-image.png' },
     
     // Twitter
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: `@${username} - thisisme` },
     { name: 'twitter:description', content: `${username}님의 포트폴리오입니다.` },
-    // { name: 'twitter:image', content: '/og-image.png' }
+    { name: 'twitter:image', content: '/og-image.png' }
   ]
 });
 </script>
