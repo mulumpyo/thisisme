@@ -134,3 +134,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+.logo-button:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+}

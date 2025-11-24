@@ -12,24 +12,26 @@ const { data: user, error } = await useAsyncData(
   () => $fetch(`/api/user/${username}`)
 );
 
-useHead({
-  title: `@${username} | thisisme`,
-  meta: [
-    { name: 'description', content: `${username}님의 포트폴리오입니다.` },
-    
-    // Facebook / Kakao
-    { property: 'og:title', content: `@${username} : thisisme` },
-    { property: 'og:description', content: `쉽게 만들고 쉽게 공유하는 나만의 포트폴리오` },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:image', content: '/og-image.png' },
-    
-    // Twitter
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: `@${username} : thisisme` },
-    { name: 'twitter:description', content: `쉽게 만들고 쉽게 공유하는 나만의 포트폴리오` },
-    { name: 'twitter:image', content: '/og-image.png' }
-  ]
-});
+if (user.value) {
+  useHead({
+    title: `@${user.value.username} | thisisme`,
+    meta: [
+      { name: 'description', content: `${user.value.username}님의 포트폴리오입니다.` },
+
+      // Facebook / Kakao
+      { property: 'og:title', content: `@${user.value.username} : thisisme` },
+      { property: 'og:description', content: `쉽게 만들고 쉽게 공유하는 나만의 포트폴리오` },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:image', content: '/og-image.png' },
+      
+      // Twitter
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: `@${user.value.username} : thisisme` },
+      { name: 'twitter:description', content: `쉽게 만들고 쉽게 공유하는 나만의 포트폴리오` },
+      { name: 'twitter:image', content: '/og-image.png' }
+    ]
+  });
+}
 </script>
 
 <template>
@@ -45,20 +47,19 @@ useHead({
       </p>
     </div>
 
-    <div v-else class="space-y-10">
-      <Card>
-        <CardHeader class="flex flex-col items-center text-center space-y-3">
-          <Avatar class="h-24 w-24">
+    <div v-else class="space-y-12">
+      <Card class="shadow-xl border-none p-8 bg-card/70 backdrop-blur-sm">
+        <CardHeader class="flex flex-col items-center text-center space-y-4">
+          <Avatar class="h-28 w-28 border-4 border-primary/50 shadow-lg">
             <AvatarImage :src="user.avatar || '/avatars/default.jpg'" />
-            <AvatarFallback>{{ user.username?.charAt(0).toUpperCase() }}</AvatarFallback>
+            <AvatarFallback class="text-3xl font-bold">{{ user.username?.charAt(0).toUpperCase() }}</AvatarFallback>
           </Avatar>
-          <CardTitle class="text-2xl font-bold">
+          <CardTitle class="text-4xl font-extrabold tracking-tight mt-4">
             {{ user.username }}
           </CardTitle>
-          <p class="text-muted-foreground">{{ user.email }}</p>
         </CardHeader>
-        <CardContent class="text-center">
-          <p class="text-base leading-relaxed whitespace-pre-line">
+        <CardContent class="text-center pt-6">
+          <p class="text-xl font-medium leading-snug whitespace-pre-line text-foreground">
             {{ user.bio || '자기소개가 아직 작성되지 않았어요 📝' }}
           </p>
         </CardContent>
@@ -66,37 +67,51 @@ useHead({
 
       <Card>
         <CardHeader>
-          <CardTitle>📬 연락처 & 링크</CardTitle>
+          <CardTitle class="text-2xl font-semibold">🧠 핵심 기술 스택</CardTitle>
         </CardHeader>
         <CardContent class="flex flex-wrap gap-3">
-          <Button v-if="user.links?.github" variant="outline" as="a" :href="user.links.github" target="_blank">GitHub</Button>
-          <Button v-if="user.links?.blog" variant="outline" as="a" :href="user.links.blog" target="_blank">Blog</Button>
-          <Button v-if="user.links?.portfolio" variant="outline" as="a" :href="user.links.portfolio" target="_blank">Portfolio</Button>
-          <Button v-if="user.links?.email" variant="outline" as="a" :href="`mailto:${user.links.email}`">Email</Button>
-          <p v-if="!user.links">등록된 링크가 없습니다 🔗</p>
+          <Badge
+            v-for="(tech, index) in user.skills || []"
+            :key="index"
+            variant="default" 
+            class="text-base px-4 py-2 font-semibold hover:ring-2 ring-primary transition-all duration-200 cursor-default"
+          >
+            {{ tech }}
+          </Badge>
+          <p v-if="!user.skills?.length" class="text-muted-foreground">
+            기술 스택 정보가 없습니다 🧩
+          </p>
         </CardContent>
       </Card>
-
+      
       <Card>
         <CardHeader>
-          <CardTitle>🚀 핵심 프로젝트</CardTitle>
+          <CardTitle class="text-2xl font-semibold">🌟 주요 프로젝트 (Projects)</CardTitle>
         </CardHeader>
-        <CardContent class="space-y-4">
+        <CardContent class="space-y-6">
           <div
             v-for="(project, index) in user.projects || []"
             :key="index"
-            class="p-4 border rounded-lg hover:shadow transition"
+            class="
+              p-5 border rounded-xl bg-card 
+              hover:shadow-2xl hover:scale-[1.01] 
+              transition duration-300 cursor-pointer
+            "
           >
-            <h3 class="font-semibold text-lg">{{ project.title }}</h3>
-            <p class="text-sm text-muted-foreground">{{ project.description }}</p>
-            <a
+            <h3 class="font-bold text-xl mb-1">{{ project.title }}</h3>
+            <p class="text-sm text-muted-foreground mb-4 leading-relaxed">
+              {{ project.description }}
+            </p>
+            <Button
               v-if="project.link"
+              variant="default"
+              as="a"
               :href="project.link"
               target="_blank"
-              class="text-primary underline text-sm mt-2 inline-block"
+              class="mt-2"
             >
-              프로젝트 보기 →
-            </a>
+              프로젝트 바로가기 →
+            </Button>
           </div>
           <p v-if="!user.projects?.length" class="text-muted-foreground">
             아직 등록된 프로젝트가 없어요 🧩
@@ -106,20 +121,14 @@ useHead({
 
       <Card>
         <CardHeader>
-          <CardTitle>🧠 기술 스택</CardTitle>
+          <CardTitle class="text-2xl font-semibold">📬 연락처 & 링크</CardTitle>
         </CardHeader>
-        <CardContent class="flex flex-wrap gap-2">
-          <Badge
-            v-for="(tech, index) in user.skills || []"
-            :key="index"
-            variant="secondary"
-            class="text-sm px-3 py-1"
-          >
-            {{ tech }}
-          </Badge>
-          <p v-if="!user.skills?.length" class="text-muted-foreground">
-            기술 스택 정보가 없습니다 🧩
-          </p>
+        <CardContent class="flex flex-wrap gap-3">
+          <Button v-if="user.links?.github" variant="outline" as="a" :href="user.links.github" target="_blank">GitHub</Button>
+          <Button v-if="user.links?.blog" variant="outline" as="a" :href="user.links.blog" target="_blank">Blog</Button>
+          <Button v-if="user.links?.portfolio" variant="outline" as="a" :href="user.links.portfolio" target="_blank">Portfolio</Button>
+          <Button v-if="user.links?.email" variant="default" as="a" :href="`mailto:${user.links.email}`">Email (연락하기)</Button>
+          <p v-if="!user.links" class="text-muted-foreground">등록된 링크가 없습니다 🔗</p>
         </CardContent>
       </Card>
     </div>

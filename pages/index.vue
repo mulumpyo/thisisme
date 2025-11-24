@@ -35,7 +35,7 @@ const handleLogin = async () => {
 
 definePageMeta({
   layout: 'page',
-  middleware: 'auth',
+  middleware: 'redirect',
 });
 </script>
 

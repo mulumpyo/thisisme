@@ -10,6 +10,7 @@ import {
   <SidebarMenu>
     <SidebarMenuButton
       size="lg"
+      class="logo-button"
     >
       <div
         class="flex aspect-square w-8 h-8 items-center justify-center rounded-lg
