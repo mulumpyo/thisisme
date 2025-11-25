@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   const { data, error } = await supabase
     .from('users')
-    .select('*')
+    .select('username, avatar_url')
     .eq('username', username)
     .single();
 

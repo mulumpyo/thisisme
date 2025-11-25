@@ -3,32 +3,35 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useHead, useRoute, useAsyncData } from '#app';
 
 const route = useRoute();
 const username = route.params.username as string;
 
-const { data: user, error } = await useAsyncData(
+const { data: user, error } = await useAsyncData<UserData>(
   `user-${username}`,
   () => $fetch(`/api/user/${username}`)
 );
 
 if (user.value) {
+  const userValue = user.value;
+  
   useHead({
-    title: `@${user.value.username} | thisisme`,
+    title: `@${userValue.username} | thisisme`,
     meta: [
-      { name: 'description', content: `${user.value.username}님의 포트폴리오입니다.` },
+      { name: 'description', content: `${userValue.username}님의 포트폴리오입니다.` },
 
       // Facebook / Kakao
-      { property: 'og:title', content: `@${user.value.username} : thisisme` },
+      { property: 'og:title', content: `@${userValue.username} : thisisme` },
       { property: 'og:description', content: `쉽게 만들고 쉽게 공유하는 나만의 포트폴리오` },
       { property: 'og:type', content: 'website' },
-      { property: 'og:image', content: '/og-image.png' },
+      { property: 'og:image', content: userValue.avatar_url || '/og-image.png' },
       
       // Twitter
       { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:title', content: `@${user.value.username} : thisisme` },
+      { name: 'twitter:title', content: `@${userValue.username} : thisisme` },
       { name: 'twitter:description', content: `쉽게 만들고 쉽게 공유하는 나만의 포트폴리오` },
-      { name: 'twitter:image', content: '/og-image.png' }
+      { name: 'twitter:image', content: userValue.avatar_url || '/og-image.png' }
     ]
   });
 }
@@ -51,7 +54,7 @@ if (user.value) {
       <Card class="shadow-xl border-none p-8 bg-card/70 backdrop-blur-sm">
         <CardHeader class="flex flex-col items-center text-center space-y-4">
           <Avatar class="h-28 w-28 border-4 border-primary/50 shadow-lg">
-            <AvatarImage :src="user.avatar || '/avatars/default.jpg'" />
+            <AvatarImage :src="user.avatar_url || '/avatars/default.jpg'" />
             <AvatarFallback class="text-3xl font-bold">{{ user.username?.charAt(0).toUpperCase() }}</AvatarFallback>
           </Avatar>
           <CardTitle class="text-4xl font-extrabold tracking-tight mt-4">
