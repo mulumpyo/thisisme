@@ -1,7 +1,7 @@
 import { createClient, type User } from '@supabase/supabase-js';
 
 interface Profile {
-  id: string;
+  user_id: string;
   email?: string;
   username: string | null;
   avatar_url: string | null;
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   );
 
   const profileData: Profile = {
-    id: user.id,
+    user_id: user.id,
     email: user.email,
     username:
       user.user_metadata?.user_name ??

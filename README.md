@@ -24,3 +24,10 @@
 ### ⚙️ 완벽한 배포 자동화 (CI/CD)
 **GitHub Actions**을 이용해서 배포 자동화를 완벽하게 구현했어요. 코드를 Push 하기만 하면, 빌드부터 배포까지 시스템이 알아서 척척 진행해 줘요!
 <br /><br />
+
+
+## 🗂 산출물
+<!-- [📄요구사항 정의서 (Google Docs)]()<br /> -->
+[📄DB 설계 (ERD Cloud)](https://www.erdcloud.com/d/7vKMJ28sPMN6XLD5J)<br />
+<!-- [📄화면 설계 (Figma)]()<br /> -->
+<br /><br />
