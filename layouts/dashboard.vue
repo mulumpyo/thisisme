@@ -71,12 +71,12 @@ const breadcrumbs = computed(() => {
             <BreadcrumbList>
               <template v-for="(crumb, index) in breadcrumbs" :key="crumb.title">
                 
-                <BreadcrumbItem class="hidden md:block">
+                <BreadcrumbItem :class="{ 'hidden md:block': index === 0 }">
                   <BreadcrumbPage v-if="index === breadcrumbs.length - 1">
                     {{ crumb.title }}
                   </BreadcrumbPage>
                   
-                  <BreadcrumbLink v-else-if="crumb.url" :href="crumb.url">
+                  <BreadcrumbLink v-else-if="crumb.url" :to="crumb.url">
                     {{ crumb.title }}
                   </BreadcrumbLink>
                   
@@ -87,7 +87,7 @@ const breadcrumbs = computed(() => {
 
                 <BreadcrumbSeparator 
                   v-if="index < breadcrumbs.length - 1" 
-                  class="hidden md:block" 
+                  :class="{ 'hidden md:block': index === 0 }"
                 />
                 
               </template>
