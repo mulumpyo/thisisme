@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-export default defineNuxtPlugin((nuxtApp) => {
+export default defineNuxtPlugin(async (nuxtApp) => {
   const config = useRuntimeConfig();
   const user = useUser();
 
@@ -43,7 +43,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     user.value = data.session?.user ?? null;
   };
 
-  setSessionUser();
+  await setSessionUser();
 
   supabase.auth.onAuthStateChange(() => {
     setSessionUser();
