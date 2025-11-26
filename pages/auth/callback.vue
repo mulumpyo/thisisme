@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, onUnmounted, onMounted } from 'vue';
+import { ref, onUnmounted, onMounted, watchEffect } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useSupabase } from '#imports';
+import { useUser } from '~/composables/useUser';
 
 type AuthState = 'loading' | 'manualRedirect' | 'error';
 
-const supabase = useSupabase();
+const user = useUser();
 const router = useRouter();
 const route = useRoute();
 
@@ -35,43 +35,31 @@ const handleError = (msg: string, redirectPath = '/') => {
 if (route.query.error || route.query.error_description) {
   console.error('Auth callback URL error:', route.query.error_description || route.query.error);
   handleError("로그인 중 오류가 발생했어요 😢");
-} else {
-  let unsubscribe: (() => void) | null = null;
-
-  const { data: authListener } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        unsubscribe?.();
-        try {
-          message.value = "로그인 중... ✍️";
-
-          const { username } = await $fetch('/api/auth/upsert', {
-            method: 'POST',
-            body: { user: session.user },
-          });
-
-          message.value = "곧 대시보드로 안내할게요 🚀";
-
-          if (username) {
-            setTimeout(() => redirectTo('/dashboard'), 600);
-          } else {
-            handleError("문제가 생겼어요 😢");
-          }
-        } catch (err) {
-          console.error('Auth callback upsert error:', err);
-          handleError("문제가 생겼어요 😢");
-        }
-      } else if (event === 'SIGNED_OUT') {
-        handleError("깃허브가 하이파이브를 받아주지 않았어요. 😢");
-      } else if (event === 'INITIAL_SESSION' && !session?.user) {
-        handleError("세션이 만료되었어요. 😢");
-      }
-    },
-  );
-
-  unsubscribe = () => authListener?.subscription.unsubscribe();
-  onUnmounted(() => unsubscribe?.());
 }
+
+watchEffect(async () => {
+  if (user.value) {
+    try {
+      message.value = "로그인 중... ✍️";
+
+      const { username } = await $fetch('/api/auth/upsert', {
+        method: 'POST',
+        body: { user: user.value },
+      });
+
+      message.value = "곧 대시보드로 안내할게요 🚀";
+
+      if (username) {
+        setTimeout(() => redirectTo('/dashboard'), 600);
+      } else {
+        handleError("문제가 생겼어요 😢");
+      }
+    } catch (err) {
+      console.error('Auth callback upsert error:', err);
+      handleError("문제가 생겼어요 😢");
+    }
+  }
+});
 </script>
 
 <template>
