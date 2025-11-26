@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router';
 import { ChevronRight, LayoutDashboard } from "lucide-vue-next";
 import * as LucideIcons from "lucide-vue-next";
+import { useSidebar } from '@/components/ui/sidebar/utils';
 
 import {
   Collapsible,
@@ -37,6 +38,7 @@ defineProps<{
 }>();
 
 const route = useRoute();
+const { isMobile, setOpenMobile } = useSidebar();
 
 const getIcon = (iconName: string) => {
   if (iconName && iconName in LucideIcons) {
@@ -48,6 +50,12 @@ const getIcon = (iconName: string) => {
 const checkIsActive = (url?: string) => {
   if (!url) return false;
   return route.path === url;
+};
+
+const handleMenuClick = () => {
+  if (isMobile.value) {
+    setOpenMobile(false);
+  }
 };
 </script>
 
@@ -77,7 +85,7 @@ const checkIsActive = (url?: string) => {
               <SidebarMenuSub>
                 <SidebarMenuSubItem v-for="subItem in menuItem.items" :key="subItem.title">
                   <SidebarMenuSubButton as-child :isActive="checkIsActive(subItem.url)">
-                    <NuxtLink :to="subItem.url">
+                    <NuxtLink :to="subItem.url" @click="handleMenuClick">
                        <component :is="getIcon(subItem.icon)" />
                       <span>{{ subItem.title }}</span>
                     </NuxtLink>
@@ -90,7 +98,7 @@ const checkIsActive = (url?: string) => {
 
         <SidebarMenuItem v-else>
           <SidebarMenuButton as-child :tooltip="menuItem.title" :isActive="checkIsActive(menuItem.url)">
-            <NuxtLink :to="menuItem.url">
+            <NuxtLink :to="menuItem.url" @click="handleMenuClick">
                <component :is="getIcon(menuItem.icon)" />
               <span>{{ menuItem.title }}</span>
             </NuxtLink>
