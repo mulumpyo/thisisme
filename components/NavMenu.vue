@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { ChevronRight, LayoutDashboard } from "lucide-vue-next";
 import * as LucideIcons from "lucide-vue-next";
 import { useSidebar } from '@/components/ui/sidebar/utils';
+import { useUser } from '@/composables/useUser';
+import type { NavGroup } from '~/config/menu';
 
 import {
   Collapsible,
@@ -20,25 +23,23 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 
-defineProps<{
-  items: {
-    title: string
-    items?: {
-      title: string
-      icon: string
-      url?: string
-      isActive?: boolean
-      items?: {
-        title: string
-        icon: string
-        url: string
-      }[]
-    }[]
-  }[]
+const props = defineProps<{
+  items: NavGroup[]
 }>();
 
 const route = useRoute();
+const user = useUser();
 const { isMobile, setOpenMobile } = useSidebar();
+
+const filteredItems = computed(() => {
+  if (!user.value) return [];
+  return props.items.filter(group => {
+    if (group.requiresAdmin) {
+      return user.value?.role === 0;
+    }
+    return true;
+  });
+});
 
 const getIcon = (iconName: string) => {
   if (iconName && iconName in LucideIcons) {
@@ -60,7 +61,7 @@ const handleMenuClick = () => {
 </script>
 
 <template>
-  <SidebarGroup v-for="group in items" :key="group.title">
+  <SidebarGroup v-for="group in filteredItems" :key="group.title">
     <SidebarGroupLabel>{{ group.title }}</SidebarGroupLabel>
     <SidebarMenu>
       

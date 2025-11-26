@@ -1,3 +1,5 @@
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+
 interface UserLink {
   github?: string;
   blog?: string;
@@ -19,4 +21,8 @@ interface UserData {
   skills?: string[];
   links?: UserLink;
   projects?: UserProject[];
+}
+
+export interface User extends SupabaseUser {
+  role?: number;
 }

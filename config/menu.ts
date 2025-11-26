@@ -9,6 +9,7 @@ export interface NavItem {
 export interface NavGroup {
     title: string
     items: NavItem[]
+    requiresAdmin?: boolean
 }
 
 const menu: NavGroup[] = [
@@ -44,6 +45,7 @@ const menu: NavGroup[] = [
     },
     {
         title: '관리자',
+        requiresAdmin: true,
         items: [
             {
                 title: '기술 스택 관리',

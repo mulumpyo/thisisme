@@ -39,8 +39,22 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   );
 
   const setSessionUser = async () => {
-    const { data } = await supabase.auth.getSession();
-    user.value = data.session?.user ?? null;
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      user.value = {
+        ...session.user,
+        role: profile?.role ?? 1,
+      };
+    } else {
+      user.value = null;
+    }
   };
 
   await setSessionUser();
