@@ -77,10 +77,10 @@ const checkIsActive = (url?: string) => {
               <SidebarMenuSub>
                 <SidebarMenuSubItem v-for="subItem in menuItem.items" :key="subItem.title">
                   <SidebarMenuSubButton as-child :isActive="checkIsActive(subItem.url)">
-                    <a :href="subItem.url">
+                    <NuxtLink :to="subItem.url">
                        <component :is="getIcon(subItem.icon)" />
                       <span>{{ subItem.title }}</span>
-                    </a>
+                    </NuxtLink>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </SidebarMenuSub>
@@ -90,10 +90,10 @@ const checkIsActive = (url?: string) => {
 
         <SidebarMenuItem v-else>
           <SidebarMenuButton as-child :tooltip="menuItem.title" :isActive="checkIsActive(menuItem.url)">
-            <a :href="menuItem.url">
+            <NuxtLink :to="menuItem.url">
                <component :is="getIcon(menuItem.icon)" />
               <span>{{ menuItem.title }}</span>
-            </a>
+            </NuxtLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
 

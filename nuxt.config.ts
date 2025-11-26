@@ -23,6 +23,9 @@ export default defineNuxtConfig({
     'shadcn-nuxt',
   ],
   ssr: true,
+  routeRules: {
+    '/dashboard/**': { ssr: false },
+  },
   nitro: {
     preset: 'cloudflare_pages',
     cloudflare: {
