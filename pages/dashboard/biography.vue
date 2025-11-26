@@ -7,7 +7,7 @@ export const containerClass = "w-full h-full";
 
 <script setup lang="ts">
 useHead({
-  title: '메인 | thisisme',
+  title: '소개 | thisisme',
   meta: [
     { name: 'description', content: '온전한 당신을 표현해보세요.' }
   ]
