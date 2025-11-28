@@ -18,6 +18,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import 'vue-sonner/style.css'
+import { Toaster } from '@/components/ui/sonner';
 
 const route = useRoute();
 
@@ -98,4 +100,5 @@ const breadcrumbs = computed(() => {
       <slot />
     </SidebarInset>
   </SidebarProvider>
+  <Toaster />
 </template>

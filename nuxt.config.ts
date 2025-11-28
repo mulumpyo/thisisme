@@ -33,7 +33,7 @@ export default defineNuxtConfig({
       nodeCompat: true,
     },
   },
-  css: ['./assets/css/main.css'],
+  css: ['./assets/css/main.css',],
   vite: {
     plugins: [
       tailwindcss()

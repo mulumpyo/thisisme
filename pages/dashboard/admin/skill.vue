@@ -4,6 +4,10 @@ definePageMeta({
   layout: 'dashboard' 
 });
 
+useHead({
+  title: `기술 스택 관리 | thisisme`,
+});
+
 import { h, ref } from 'vue';
 import { useVueTable, getCoreRowModel, createColumnHelper, FlexRender } from '@tanstack/vue-table';
 import { MoreHorizontal, Pencil, Trash2, Plus, Loader2 } from 'lucide-vue-next';
@@ -11,6 +15,7 @@ import { MoreHorizontal, Pencil, Trash2, Plus, Loader2 } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'vue-sonner';
 import { 
   Table, 
   TableHeader, 
@@ -33,6 +38,16 @@ import {
   DialogHeader, 
   DialogTitle 
 } from '@/components/ui/dialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog'; 
 
 interface SkillCategory {
   category_id: string
@@ -40,6 +55,17 @@ interface SkillCategory {
 }
 
 const { data: categories, refresh, status } = await useFetch<SkillCategory[]>('/api/skill-categories');
+
+const isDialogOpen = ref(false);
+const isSubmitting = ref(false);
+const formData = ref({ category_id: '', name: '' });
+const isDeleteDialogOpen = ref(false);
+const categoryToDelete = ref<string | null>(null);
+
+const confirmDelete = (id: string) => {
+  categoryToDelete.value = id;
+  isDeleteDialogOpen.value = true;
+};
 
 const renderActions = (category: SkillCategory) => {
   return h(DropdownMenu, {}, {
@@ -54,7 +80,7 @@ const renderActions = (category: SkillCategory) => {
           h(DropdownMenuItem, { onClick: () => openModal(category) }, {
             default: () => [h(Pencil, { class: 'mr-2 h-4 w-4' }), '수정']
           }),
-          h(DropdownMenuItem, { class: 'text-red-600', onClick: () => handleDelete(category.category_id) }, {
+          h(DropdownMenuItem, { class: 'text-destructive focus:text-destructive', onClick: () => confirmDelete(category.category_id) }, {
             default: () => [h(Trash2, { class: 'mr-2 h-4 w-4' }), '삭제']
           }),
         ]
@@ -81,10 +107,6 @@ const table = useVueTable({
   getCoreRowModel: getCoreRowModel(),
 });
 
-const isDialogOpen = ref(false);
-const isSubmitting = ref(false);
-const formData = ref({ category_id: '', name: '' });
-
 const openModal = (category?: SkillCategory) => {
   formData.value = category 
     ? { ...category } 
@@ -104,20 +126,40 @@ const handleSave = async () => {
     await $fetch(url, { method, body: { name: formData.value.name } });
     await refresh();
     isDialogOpen.value = false;
+
+    toast.success(isEdit ? '수정 성공' : '추가 성공', {
+      description: isEdit 
+        ? `'${formData.value.name}' 카테고리가 수정되었습니다.` 
+        : `'${formData.value.name}' 카테고리가 추가되었습니다.`,
+    });
   } catch (error) {
-    alert('처리 중 오류가 발생했습니다.');
+    toast.error('처리 실패', {
+      description: '카테고리 저장 중 오류가 발생했습니다.',
+    });
   } finally {
     isSubmitting.value = false;
   }
 };
 
-const handleDelete = async (id: string) => {
-  if (!confirm('정말로 삭제하시겠습니까?')) return;
+const executeDelete = async () => {
+  const id = categoryToDelete.value;
+  if (!id) return;
+
+  isDeleteDialogOpen.value = false; 
+
   try {
     await $fetch(`/api/skill-categories/${id}`, { method: 'DELETE' });
     await refresh();
+    
+    toast.success('삭제 성공', {
+      description: '카테고리가 성공적으로 삭제되었습니다.',
+    });
   } catch (error) {
-    alert('삭제 실패');
+    toast.error('삭제 실패', {
+      description: '카테고리 삭제 중 오류가 발생했습니다.',
+    });
+  } finally {
+    categoryToDelete.value = null; 
   }
 };
 </script>
@@ -131,7 +173,7 @@ const handleDelete = async (id: string) => {
       </Button>
     </div>
 
-    <div class="rounded-md border bg-white">
+    <div class="rounded-md border bg-backgroud">
       <Table>
         <TableHeader>
           <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
@@ -181,5 +223,23 @@ const handleDelete = async (id: string) => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog :open="isDeleteDialogOpen" @update:open="isDeleteDialogOpen = $event">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
+          <AlertDialogDescription>
+            이 작업은 되돌릴 수 없습니다. 선택한 카테고리를 영구적으로 삭제하시겠습니까?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="categoryToDelete = null">취소</AlertDialogCancel>
+          <AlertDialogAction class="bg-destructive hover:bg-destructive/90" @click="executeDelete">
+            삭제
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
   </div>
 </template>
