@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { h, ref } from 'vue';
+import { h, ref, computed } from 'vue';
 import { useVueTable, getCoreRowModel, createColumnHelper, FlexRender } from '@tanstack/vue-table';
-import { MoreHorizontal, Pencil, Trash2, Plus, Loader2 } from 'lucide-vue-next';
+import { MoreHorizontal, Pencil, Trash2, Plus, Loader2, AlertTriangle } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 import { Button } from '@/components/ui/button';
@@ -25,14 +25,26 @@ interface SkillCategory {
   name: string
 }
 
+interface Skill {
+  skill_id: string
+  category_id: string
+  name: string
+}
+
 const { data: categories, refresh: refreshCategories, status: categoryStatus } = await useFetch<SkillCategory[]>('/api/skill-categories');
 
 const isCategoryDialogOpen = ref(false);
 const isSubmitting = ref(false);
 const categoryForm = ref({ category_id: '', name: '' });
+
+// 삭제 관련 상태 확장
 const deleteState = ref({
   isOpen: false,
-  id: ''
+  id: '',
+  categoryName: '',
+  affectedSkills: [] as Skill[],
+  inputValue: '', 
+  isLoading: false
 });
 
 const openCategoryModal = (category?: SkillCategory) => {
@@ -42,8 +54,26 @@ const openCategoryModal = (category?: SkillCategory) => {
   isCategoryDialogOpen.value = true;
 };
 
-const confirmDelete = (id: string) => {
-  deleteState.value = { isOpen: true, id };
+// 삭제 버튼 클릭 시 실행
+const confirmDelete = async (category: SkillCategory) => {
+  deleteState.value = { 
+    isOpen: true, 
+    id: category.category_id, 
+    categoryName: category.name,
+    affectedSkills: [],
+    inputValue: '',
+    isLoading: true
+  };
+
+  try {
+    const skills = await $fetch<Skill[]>('/api/skill'); 
+    
+    deleteState.value.affectedSkills = skills.filter(s => s.category_id === category.category_id);
+  } catch (e) {
+    toast.error('연관 데이터 조회 실패');
+  } finally {
+    deleteState.value.isLoading = false;
+  }
 };
 
 const handleSaveCategory = async () => {
@@ -66,15 +96,19 @@ const handleSaveCategory = async () => {
   }
 };
 
-const executeDelete = async () => {
+const executeDelete = async (e: Event) => {
+  if (deleteState.value.inputValue !== '삭제') {
+    e.preventDefault();
+    return;
+  }
+
   const { id } = deleteState.value;
   if (!id) return;
-
-  deleteState.value.isOpen = false; 
 
   try {
     await $fetch(`/api/skill-categories/${id}`, { method: 'DELETE' });
     await refreshCategories();
+    deleteState.value.isOpen = false;
     toast.success('카테고리가 삭제되었습니다.');
   } catch (error) {
     toast.error('삭제 실패');
@@ -97,7 +131,8 @@ const renderCategoryActions = (category: SkillCategory) => {
           h(DropdownMenuItem, { onClick: () => openCategoryModal(category) }, {
             default: () => [h(Pencil, { class: 'mr-2 h-4 w-4' }), '수정']
           }),
-          h(DropdownMenuItem, { class: 'text-destructive focus:text-destructive', onClick: () => confirmDelete(category.category_id) }, {
+          // confirmDelete에 객체 전체를 전달하도록 수정
+          h(DropdownMenuItem, { class: 'text-destructive focus:text-destructive', onClick: () => confirmDelete(category) }, {
             default: () => [h(Trash2, { class: 'mr-2 h-4 w-4' }), '삭제']
           }),
         ]
@@ -190,14 +225,60 @@ const categoryTable = useVueTable({
     <AlertDialog :open="deleteState.isOpen" @update:open="deleteState.isOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
-          <AlertDialogDescription>
-            이 작업은 되돌릴 수 없습니다. 해당 카테고리가 영구적으로 삭제됩니다.
+          <AlertDialogTitle class="flex items-center gap-2 text-destructive">
+            <AlertTriangle class="h-5 w-5" />
+            정말 삭제하시겠습니까?
+          </AlertDialogTitle>
+          <AlertDialogDescription as="div" class="space-y-4 pt-2">
+            
+            <div v-if="deleteState.isLoading" class="flex items-center justify-center py-4">
+              <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
+              <span class="ml-2 text-sm text-muted-foreground">연관 데이터 확인 중...</span>
+            </div>
+
+            <div v-else class="space-y-4">
+              <p>
+                <span class="font-bold text-foreground">{{ deleteState.categoryName }}</span> 카테고리를 삭제하려고 합니다.
+                <br>이 작업은 되돌릴 수 없습니다.
+              </p>
+
+              <div v-if="deleteState.affectedSkills.length > 0" class="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-destructive text-sm">
+                <p class="font-semibold mb-2">다음 기술 스택들도 함께 영구 삭제됩니다:</p>
+                <div class="flex flex-wrap gap-1 max-h-[100px] overflow-y-auto">
+                   <span 
+                    v-for="skill in deleteState.affectedSkills" 
+                    :key="skill.skill_id"
+                    class="bg-destructive/20 px-1.5 py-0.5 rounded text-xs font-medium"
+                   >
+                     {{ skill.name }}
+                   </span>
+                </div>
+              </div>
+              <div v-else class="text-sm text-muted-foreground">
+                연관된 기술 스택이 없습니다.
+              </div>
+
+              <div class="space-y-2">
+                <Label class="text-xs text-muted-foreground">
+                  확인을 위해 아래 입력창에 <span class="font-bold text-foreground">삭제</span> 라고 입력해주세요.
+                </Label>
+                <Input 
+                  v-model="deleteState.inputValue" 
+                  placeholder="삭제" 
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel @click="deleteState.isOpen = false">취소</AlertDialogCancel>
-          <AlertDialogAction class="bg-destructive hover:bg-destructive/90" @click="executeDelete">
+          <AlertDialogAction 
+            class="bg-destructive hover:bg-destructive/90" 
+            @click="executeDelete"
+            :disabled="deleteState.inputValue !== '삭제' || deleteState.isLoading"
+          >
             삭제
           </AlertDialogAction>
         </AlertDialogFooter>

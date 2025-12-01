@@ -35,7 +35,7 @@ interface Skill {
 }
 
 const { data: categories } = await useFetch<SkillCategory[]>('/api/skill-categories');
-const { data: skills, refresh: refreshSkills, status: skillStatus } = await useFetch<Skill[]>('/api/skills');
+const { data: skills, refresh: refreshSkills, status: skillStatus } = await useFetch<Skill[]>('/api/skill');
 
 const isSkillDialogOpen = ref(false);
 const isSubmitting = ref(false);

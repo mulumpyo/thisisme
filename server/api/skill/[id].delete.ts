@@ -11,9 +11,9 @@ export default defineEventHandler(async (event) => {
   const supabase = createClient(config.public.supabaseUrl, config.supabaseSecretKey);
 
   const { error } = await supabase
-    .from('skill_category')
+    .from('skills')
     .delete()
-    .eq('category_id', id);
+    .eq('skill_id', id);
 
   if (error) {
     throw createError({ statusCode: 500, statusMessage: error.message });
