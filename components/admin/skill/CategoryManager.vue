@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { h, ref, computed } from 'vue';
-import { useVueTable, getCoreRowModel, createColumnHelper, FlexRender } from '@tanstack/vue-table';
-import { MoreHorizontal, Pencil, Trash2, Plus, Loader2, AlertTriangle } from 'lucide-vue-next';
+import { 
+  useVueTable, 
+  getCoreRowModel, 
+  createColumnHelper, 
+  FlexRender, 
+  getPaginationRowModel
+} from '@tanstack/vue-table';
+import { 
+  MoreHorizontal, Pencil, Trash2, Plus, Loader2, AlertTriangle, 
+  ChevronLeft, ChevronRight
+} from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +29,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
 
+// Types
 interface SkillCategory {
   category_id: string
   name: string
@@ -31,13 +41,36 @@ interface Skill {
   name: string
 }
 
-const { data: categories, refresh: refreshCategories, status: categoryStatus } = await useFetch<SkillCategory[]>('/api/skill-categories');
+interface PaginatedResponse {
+  data: SkillCategory[];
+  count: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
+// Pagination
+const pagination = ref({
+  pageIndex: 0,
+  pageSize: 5,
+});
+
+const { data: responseData, refresh: refreshCategories, status: categoryStatus } = useFetch<PaginatedResponse>('/api/skill-categories', {
+  query: computed(() => ({
+    page: pagination.value.pageIndex + 1,
+    limit: pagination.value.pageSize
+  }))
+});
+
+const categories = computed<SkillCategory[]>(() => responseData.value?.data || []);
+const totalPages = computed(() => responseData.value?.totalPages || 0);
+const totalCount = computed(() => responseData.value?.count || 0);
+
+// State
 const isCategoryDialogOpen = ref(false);
 const isSubmitting = ref(false);
 const categoryForm = ref({ category_id: '', name: '' });
 
-// 삭제 관련 상태 확장
 const deleteState = ref({
   isOpen: false,
   id: '',
@@ -54,7 +87,6 @@ const openCategoryModal = (category?: SkillCategory) => {
   isCategoryDialogOpen.value = true;
 };
 
-// 삭제 버튼 클릭 시 실행
 const confirmDelete = async (category: SkillCategory) => {
   deleteState.value = { 
     isOpen: true, 
@@ -67,7 +99,6 @@ const confirmDelete = async (category: SkillCategory) => {
 
   try {
     const skills = await $fetch<Skill[]>('/api/skill'); 
-    
     deleteState.value.affectedSkills = skills.filter(s => s.category_id === category.category_id);
   } catch (e) {
     toast.error('연관 데이터 조회 실패');
@@ -131,7 +162,6 @@ const renderCategoryActions = (category: SkillCategory) => {
           h(DropdownMenuItem, { onClick: () => openCategoryModal(category) }, {
             default: () => [h(Pencil, { class: 'mr-2 h-4 w-4' }), '수정']
           }),
-          // confirmDelete에 객체 전체를 전달하도록 수정
           h(DropdownMenuItem, { class: 'text-destructive focus:text-destructive', onClick: () => confirmDelete(category) }, {
             default: () => [h(Trash2, { class: 'mr-2 h-4 w-4' }), '삭제']
           }),
@@ -153,9 +183,21 @@ const categoryColumns = [
 ];
 
 const categoryTable = useVueTable({
-  get data() { return categories.value || [] },
+  get data() { return categories.value },
   columns: categoryColumns,
   getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  manualPagination: true,
+  get pageCount() { return totalPages.value },
+  get rowCount() { return totalCount.value },
+  state: {
+    get pagination() { return pagination.value },
+  },
+  onPaginationChange: (updaterOrValue) => {
+    pagination.value = typeof updaterOrValue === 'function'
+      ? updaterOrValue(pagination.value)
+      : updaterOrValue
+  },
 });
 </script>
 
@@ -178,7 +220,11 @@ const categoryTable = useVueTable({
         </TableHeader>
         <TableBody>
           <TableRow v-if="categoryStatus === 'pending'">
-            <TableCell :colspan="categoryColumns.length" class="h-24 text-center">로딩 중...</TableCell>
+            <TableCell :colspan="categoryColumns.length" class="h-24 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <Loader2 class="h-4 w-4 animate-spin" /> 로딩 중...
+                </div>
+            </TableCell>
           </TableRow>
           <template v-else-if="categoryTable.getRowModel().rows?.length">
             <TableRow v-for="row in categoryTable.getRowModel().rows" :key="row.id">
@@ -194,6 +240,34 @@ const categoryTable = useVueTable({
       </Table>
     </div>
 
+    <div class="flex items-center justify-end space-x-2 py-2">
+        <div class="flex-1 text-sm text-muted-foreground">
+            Total {{ totalCount }} items
+        </div>
+        <div class="space-x-2">
+            <Button
+                variant="outline"
+                size="sm"
+                :disabled="!categoryTable.getCanPreviousPage()"
+                @click="categoryTable.previousPage()"
+            >
+                <ChevronLeft class="h-4 w-4" />
+                이전
+            </Button>
+            <span class="text-sm font-medium">
+                Page {{ pagination.pageIndex + 1 }} of {{ categoryTable.getPageCount() }}
+            </span>
+            <Button
+                variant="outline"
+                size="sm"
+                :disabled="!categoryTable.getCanNextPage()"
+                @click="categoryTable.nextPage()"
+            >
+                다음
+                <ChevronRight class="h-4 w-4" />
+            </Button>
+        </div>
+    </div>
     <Dialog :open="isCategoryDialogOpen" @update:open="isCategoryDialogOpen = $event">
       <DialogContent class="sm:max-w-[425px]">
         <DialogHeader>
@@ -245,13 +319,13 @@ const categoryTable = useVueTable({
               <div v-if="deleteState.affectedSkills.length > 0" class="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-destructive text-sm">
                 <p class="font-semibold mb-2">다음 기술 스택들도 함께 영구 삭제됩니다:</p>
                 <div class="flex flex-wrap gap-1 max-h-[100px] overflow-y-auto">
-                   <span 
-                    v-for="skill in deleteState.affectedSkills" 
-                    :key="skill.skill_id"
-                    class="bg-destructive/20 px-1.5 py-0.5 rounded text-xs font-medium"
-                   >
-                     {{ skill.name }}
-                   </span>
+                    <span 
+                     v-for="skill in deleteState.affectedSkills" 
+                     :key="skill.skill_id"
+                     class="bg-destructive/20 px-1.5 py-0.5 rounded text-xs font-medium"
+                    >
+                      {{ skill.name }}
+                    </span>
                 </div>
               </div>
               <div v-else class="text-sm text-muted-foreground">
@@ -266,6 +340,7 @@ const categoryTable = useVueTable({
                   v-model="deleteState.inputValue" 
                   placeholder="삭제" 
                   autocomplete="off"
+                  @keyup.enter="executeDelete"
                 />
               </div>
             </div>

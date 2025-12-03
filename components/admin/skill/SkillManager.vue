@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref } from 'vue';
+import { h, ref, computed } from 'vue';
 import { useVueTable, getCoreRowModel, createColumnHelper, FlexRender } from '@tanstack/vue-table';
 import { MoreHorizontal, Pencil, Trash2, Plus, Loader2 } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
@@ -34,8 +34,13 @@ interface Skill {
   name: string
 }
 
-const { data: categories } = await useFetch<SkillCategory[]>('/api/skill-categories');
+const { data: categoriesData } = await useFetch<any>('/api/skill-categories');
 const { data: skills, refresh: refreshSkills, status: skillStatus } = await useFetch<Skill[]>('/api/skill');
+
+const categoryList = computed<SkillCategory[]>(() => {
+  if (!categoriesData.value) return [];
+  return Array.isArray(categoriesData.value) ? categoriesData.value : (categoriesData.value.data || []);
+});
 
 const isSkillDialogOpen = ref(false);
 const isSubmitting = ref(false);
@@ -133,7 +138,7 @@ const skillColumns = [
   skillHelper.accessor('category_id', {
     header: '카테고리',
     cell: (info) => {
-      const cat = categories.value?.find(c => c.category_id === info.getValue());
+      const cat = categoryList.value.find(c => c.category_id === info.getValue());
       return h('div', { class: 'text-muted-foreground text-sm' }, cat?.name || '-');
     }
   }),
@@ -202,7 +207,7 @@ const skillTable = useVueTable({
                 <SelectContent>
                   <SelectGroup>
                     <SelectItem 
-                      v-for="cat in categories" 
+                      v-for="cat in categoryList" 
                       :key="cat.category_id" 
                       :value="cat.category_id"
                     >
