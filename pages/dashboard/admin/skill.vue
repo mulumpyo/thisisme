@@ -17,7 +17,7 @@ useHead({ title: `기술 스택 관리 | thisisme` });
       <div>
         <h1 class="text-2xl font-bold">기술 스택 관리</h1>
         <p class="text-muted-foreground text-sm mt-1">
-          프로젝트에 사용되는 기술 스택과 카테고리를 관리합니다.
+          기술 스택과 카테고리를 관리합니다.
         </p>
       </div>
     </div>

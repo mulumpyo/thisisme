@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { h, ref, computed } from 'vue';
-import { useVueTable, getCoreRowModel, createColumnHelper, FlexRender } from '@tanstack/vue-table';
-import { MoreHorizontal, Pencil, Trash2, Plus, Loader2 } from 'lucide-vue-next';
+import { 
+  useVueTable, 
+  getCoreRowModel, 
+  createColumnHelper, 
+  FlexRender, 
+  getPaginationRowModel
+} from '@tanstack/vue-table';
+import { 
+  MoreHorizontal, Pencil, Trash2, Plus, Loader2, 
+  ChevronLeft, ChevronRight, AlertTriangle
+} from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 import { Button } from '@/components/ui/button';
@@ -23,6 +32,7 @@ import {
   Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
+// Types
 interface SkillCategory {
   category_id: string
   name: string
@@ -42,6 +52,13 @@ const categoryList = computed<SkillCategory[]>(() => {
   return Array.isArray(categoriesData.value) ? categoriesData.value : (categoriesData.value.data || []);
 });
 
+// Pagination
+const pagination = ref({
+  pageIndex: 0,
+  pageSize: 5,
+});
+
+// State
 const isSkillDialogOpen = ref(false);
 const isSubmitting = ref(false);
 const skillForm = ref({ skill_id: '', category_id: '', name: '' });
@@ -105,7 +122,6 @@ const executeDelete = async () => {
   }
 };
 
-// Table
 const skillHelper = createColumnHelper<Skill>();
 
 const renderSkillActions = (skill: Skill) => {
@@ -152,12 +168,24 @@ const skillTable = useVueTable({
   get data() { return skills.value || [] },
   columns: skillColumns,
   getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  state: {
+    get pagination() { return pagination.value },
+  },
+  onPaginationChange: (updaterOrValue) => {
+    pagination.value = typeof updaterOrValue === 'function'
+      ? updaterOrValue(pagination.value)
+      : updaterOrValue
+  },
 });
 </script>
 
 <template>
   <div class="space-y-4">
-    <div class="flex justify-end">
+    <div class="flex items-center justify-between">
+      <div class="flex text-sm text-muted-foreground">
+        총 기술 스택 수 {{ skills?.length || 0 }}
+      </div>
       <Button @click="() => openSkillModal()">
         <Plus class="mr-2 h-4 w-4" />기술 스택 추가
       </Button>
@@ -174,7 +202,11 @@ const skillTable = useVueTable({
         </TableHeader>
         <TableBody>
           <TableRow v-if="skillStatus === 'pending'">
-            <TableCell :colspan="skillColumns.length" class="h-24 text-center">로딩 중...</TableCell>
+            <TableCell :colspan="skillColumns.length" class="h-24 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <Loader2 class="h-4 w-4 animate-spin" /> 로딩 중...
+                </div>
+            </TableCell>
           </TableRow>
           <template v-else-if="skillTable.getRowModel().rows?.length">
             <TableRow v-for="row in skillTable.getRowModel().rows" :key="row.id">
@@ -188,6 +220,33 @@ const skillTable = useVueTable({
           </TableRow>
         </TableBody>
       </Table>
+    </div>
+
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium">
+        총 {{ skillTable.getPageCount() }} 페이지 중 {{ pagination.pageIndex + 1 }}
+      </span>
+      
+      <div class="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!skillTable.getCanPreviousPage()"
+          @click="skillTable.previousPage()"
+        >
+          <ChevronLeft class="h-4 w-4" />
+          이전
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!skillTable.getCanNextPage()"
+          @click="skillTable.nextPage()"
+        >
+          다음
+          <ChevronRight class="h-4 w-4" />
+        </Button>
+      </div>
     </div>
 
     <Dialog :open="isSkillDialogOpen" @update:open="isSkillDialogOpen = $event">
@@ -229,7 +288,7 @@ const skillTable = useVueTable({
             />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter class="flex flex-row justify-end gap-2">
           <Button variant="outline" @click="isSkillDialogOpen = false">취소</Button>
           <Button @click="handleSaveSkill" :disabled="isSubmitting">
             <Loader2 v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" />
@@ -242,13 +301,16 @@ const skillTable = useVueTable({
     <AlertDialog :open="deleteState.isOpen" @update:open="deleteState.isOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle class="flex items-center justify-center sm:justify-start gap-2 text-destructive text-center sm:text-left">
+            <AlertTriangle class="h-5 w-5" />
+            정말 삭제하시겠습니까?
+          </AlertDialogTitle>
+          <AlertDialogDescription class="text-center sm:text-left">
             이 작업은 되돌릴 수 없습니다. 해당 기술 스택이 영구적으로 삭제됩니다.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel @click="deleteState.isOpen = false">취소</AlertDialogCancel>
+        <AlertDialogFooter class="flex flex-row justify-end gap-2">
+          <AlertDialogCancel @click="deleteState.isOpen = false" class="mt-0">취소</AlertDialogCancel>
           <AlertDialogAction class="bg-destructive hover:bg-destructive/90" @click="executeDelete">
             삭제
           </AlertDialogAction>

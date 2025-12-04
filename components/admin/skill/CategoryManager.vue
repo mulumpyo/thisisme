@@ -173,7 +173,7 @@ const renderCategoryActions = (category: SkillCategory) => {
 
 const categoryColumns = [
   categoryHelper.accessor('name', {
-    header: '카테고리명',
+    header: '카테고리',
     cell: (info) => h('div', { class: 'font-medium pl-2' }, info.getValue()),
   }),
   categoryHelper.display({
@@ -203,7 +203,10 @@ const categoryTable = useVueTable({
 
 <template>
   <div class="space-y-4">
-    <div class="flex justify-end">
+    <div class="flex items-center justify-between">
+      <div class="flex text-sm text-muted-foreground">
+        총 카테고리 수 {{ totalCount }}
+      </div>
       <Button @click="() => openCategoryModal()">
         <Plus class="mr-2 h-4 w-4" />카테고리 추가
       </Button>
@@ -240,34 +243,33 @@ const categoryTable = useVueTable({
       </Table>
     </div>
 
-    <div class="flex items-center justify-end space-x-2 py-2">
-        <div class="flex-1 text-sm text-muted-foreground">
-            Total {{ totalCount }} items
-        </div>
-        <div class="space-x-2">
-            <Button
-                variant="outline"
-                size="sm"
-                :disabled="!categoryTable.getCanPreviousPage()"
-                @click="categoryTable.previousPage()"
-            >
-                <ChevronLeft class="h-4 w-4" />
-                이전
-            </Button>
-            <span class="text-sm font-medium">
-                Page {{ pagination.pageIndex + 1 }} of {{ categoryTable.getPageCount() }}
-            </span>
-            <Button
-                variant="outline"
-                size="sm"
-                :disabled="!categoryTable.getCanNextPage()"
-                @click="categoryTable.nextPage()"
-            >
-                다음
-                <ChevronRight class="h-4 w-4" />
-            </Button>
-        </div>
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium">
+        총 {{ categoryTable.getPageCount() }} 페이지 중 {{ pagination.pageIndex + 1 }}
+      </span>
+      
+      <div class="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!categoryTable.getCanPreviousPage()"
+          @click="categoryTable.previousPage()"
+        >
+          <ChevronLeft class="h-4 w-4" />
+          이전
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!categoryTable.getCanNextPage()"
+          @click="categoryTable.nextPage()"
+        >
+          다음
+          <ChevronRight class="h-4 w-4" />
+        </Button>
+      </div>
     </div>
+
     <Dialog :open="isCategoryDialogOpen" @update:open="isCategoryDialogOpen = $event">
       <DialogContent class="sm:max-w-[425px]">
         <DialogHeader>
@@ -286,7 +288,8 @@ const categoryTable = useVueTable({
             />
           </div>
         </div>
-        <DialogFooter>
+        
+        <DialogFooter class="flex flex-row justify-end gap-2">
           <Button variant="outline" @click="isCategoryDialogOpen = false">취소</Button>
           <Button @click="handleSaveCategory" :disabled="isSubmitting">
             <Loader2 v-if="isSubmitting" class="mr-2 h-4 w-4 animate-spin" />
@@ -299,7 +302,7 @@ const categoryTable = useVueTable({
     <AlertDialog :open="deleteState.isOpen" @update:open="deleteState.isOpen = $event">
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle class="flex items-center gap-2 text-destructive">
+          <AlertDialogTitle class="flex items-center justify-center sm:justify-start gap-2 text-destructive text-center sm:text-left">
             <AlertTriangle class="h-5 w-5" />
             정말 삭제하시겠습니까?
           </AlertDialogTitle>
@@ -320,9 +323,9 @@ const categoryTable = useVueTable({
                 <p class="font-semibold mb-2">다음 기술 스택들도 함께 영구 삭제됩니다:</p>
                 <div class="flex flex-wrap gap-1 max-h-[100px] overflow-y-auto">
                     <span 
-                     v-for="skill in deleteState.affectedSkills" 
-                     :key="skill.skill_id"
-                     class="bg-destructive/20 px-1.5 py-0.5 rounded text-xs font-medium"
+                      v-for="skill in deleteState.affectedSkills" 
+                      :key="skill.skill_id"
+                      class="bg-destructive/20 px-1.5 py-0.5 rounded text-xs font-medium"
                     >
                       {{ skill.name }}
                     </span>
@@ -333,7 +336,7 @@ const categoryTable = useVueTable({
               </div>
 
               <div class="space-y-2">
-                <Label class="text-xs text-muted-foreground">
+                <Label class="text-xs text-muted-foreground flex items-center justify-center sm:justify-start gap-2">
                   확인을 위해 아래 입력창에 <span class="font-bold text-foreground">삭제</span> 라고 입력해주세요.
                 </Label>
                 <Input 
@@ -347,8 +350,9 @@ const categoryTable = useVueTable({
 
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel @click="deleteState.isOpen = false">취소</AlertDialogCancel>
+        
+        <AlertDialogFooter class="flex flex-row justify-end gap-2">
+          <AlertDialogCancel @click="deleteState.isOpen = false" class="mt-0">취소</AlertDialogCancel>
           <AlertDialogAction 
             class="bg-destructive hover:bg-destructive/90" 
             @click="executeDelete"
