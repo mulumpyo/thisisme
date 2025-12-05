@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { 
   Table, TableHeader, TableRow, TableHead, TableBody, TableCell 
 } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
@@ -201,13 +202,20 @@ const skillTable = useVueTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-if="skillStatus === 'pending'">
-            <TableCell :colspan="skillColumns.length" class="h-24 text-center">
-                <div class="flex items-center justify-center gap-2">
-                    <Loader2 class="h-4 w-4 animate-spin" /> 로딩 중...
-                </div>
-            </TableCell>
-          </TableRow>
+          <template v-if="skillStatus === 'pending'">
+            <TableRow v-for="index in pagination.pageSize" :key="index">
+              <TableCell class="pl-4">
+                <Skeleton class="h-5 w-[120px]" />
+              </TableCell>
+              <TableCell>
+                <Skeleton class="h-4 w-[80px]" />
+              </TableCell>
+              <TableCell>
+                <Skeleton class="h-8 w-8 rounded-md" />
+              </TableCell>
+            </TableRow>
+          </template>
+
           <template v-else-if="skillTable.getRowModel().rows?.length">
             <TableRow v-for="row in skillTable.getRowModel().rows" :key="row.id">
               <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
@@ -215,6 +223,7 @@ const skillTable = useVueTable({
               </TableCell>
             </TableRow>
           </template>
+          
           <TableRow v-else>
             <TableCell :colspan="skillColumns.length" class="h-24 text-center">데이터가 없습니다.</TableCell>
           </TableRow>

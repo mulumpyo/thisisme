@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { 
   Table, TableHeader, TableRow, TableHead, TableBody, TableCell 
 } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
@@ -222,13 +223,17 @@ const categoryTable = useVueTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-if="categoryStatus === 'pending'">
-            <TableCell :colspan="categoryColumns.length" class="h-24 text-center">
-                <div class="flex items-center justify-center gap-2">
-                    <Loader2 class="h-4 w-4 animate-spin" /> 로딩 중...
-                </div>
-            </TableCell>
-          </TableRow>
+          <template v-if="categoryStatus === 'pending'">
+            <TableRow v-for="index in pagination.pageSize" :key="index">
+              <TableCell class="pl-4">
+                <Skeleton class="h-5 w-[150px]" />
+              </TableCell>
+              <TableCell>
+                <Skeleton class="h-8 w-8 rounded-md" />
+              </TableCell>
+            </TableRow>
+          </template>
+
           <template v-else-if="categoryTable.getRowModel().rows?.length">
             <TableRow v-for="row in categoryTable.getRowModel().rows" :key="row.id">
               <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
@@ -236,6 +241,7 @@ const categoryTable = useVueTable({
               </TableCell>
             </TableRow>
           </template>
+          
           <TableRow v-else>
             <TableCell :colspan="categoryColumns.length" class="h-24 text-center">데이터가 없습니다.</TableCell>
           </TableRow>
