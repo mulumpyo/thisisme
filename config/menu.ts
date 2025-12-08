@@ -52,11 +52,11 @@ const menu: NavGroup[] = [
                 icon: 'CodeXml',
                 url: '/dashboard/admin/skill'
             },
-            {
-                title: '사용자 관리',
-                icon: 'UsersRound',
-                url: '/dashboard/admin/user'
-            },
+            // {
+            //     title: '사용자 관리',
+            //     icon: 'UsersRound',
+            //     url: '/dashboard/admin/user'
+            // },
         ],
     },
 ];
