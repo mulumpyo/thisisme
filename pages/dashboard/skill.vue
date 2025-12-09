@@ -116,7 +116,7 @@ const getCategoryIcon = (catName: string) => {
   <div class="flex flex-1 flex-col gap-6 p-4 md:p-8 pt-0 h-[calc(100vh-4rem)]">
     
     <div class="flex flex-col gap-2">
-      <h1 class="text-2xl font-bold tracking-tight">기술 스택 설정</h1>
+      <h1 class="text-2xl font-bold tracking-tight">기술 스택</h1>
       <p class="text-muted-foreground">
         프로필에 표시될 기술 스택을 선택해주세요. 선택한 순서대로 포트폴리오에 노출됩니다.
       </p>

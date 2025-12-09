@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type User } from '@supabase/supabase-js';
 
 export default defineEventHandler(async (event) => {
   const skillId = event.context.params?.id;
@@ -8,42 +8,43 @@ export default defineEventHandler(async (event) => {
   }
 
   const config = useRuntimeConfig();
-
+  let user: User | null = null;
+  
+  const adminClient = createClient(config.public.supabaseUrl, config.supabaseSecretKey);
   const accessToken = getCookie(event, 'sb-access-token');
-  const refreshToken = getCookie(event, 'sb-refresh-token');
 
-  if (!accessToken || !refreshToken) {
-    throw createError({ statusCode: 401, statusMessage: '인증 토큰이 없습니다.' });
+  if (accessToken) {
+    const { data: userData } = await adminClient.auth.getUser(accessToken);
+    if (userData.user) {
+      user = userData.user;
+    }
   }
 
-  const supabaseAuth = createClient(config.public.supabaseUrl, config.public.supabaseKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  });
+  if (!user) {
+    const refreshToken = getCookie(event, 'sb-refresh-token');
+    if (!refreshToken) {
+      throw createError({ statusCode: 401, statusMessage: '인증 토큰이 없습니다.' });
+    }
 
-  const { data: { session }, error: sessionError } = await supabaseAuth.auth.setSession({
-    access_token: accessToken,
-    refresh_token: refreshToken
-  });
+    const authClient = createClient(config.public.supabaseUrl, config.public.supabaseKey, {
+      auth: { persistSession: false },
+    });
+    const { data: refreshData, error: refreshError } = await authClient.auth.refreshSession({ refresh_token: refreshToken });
 
-  if (sessionError) {
-    throw createError({ statusCode: 401, statusMessage: `세션 설정 실패: ${sessionError.message}` });
-  }
-  if (!session) {
-    throw createError({ statusCode: 401, statusMessage: '유효하지 않은 토큰으로 세션을 만들 수 없습니다.' });
-  }
+    if (refreshError || !refreshData.session) {
+      throw createError({ statusCode: 401, statusMessage: `세션 갱신에 실패했습니다: ${refreshError?.message}` });
+    }
 
-  if (session.access_token && session.access_token !== accessToken) {
-    setCookie(event, 'sb-access-token', session.access_token, { path: '/', sameSite: 'lax', maxAge: 60 * 60 });
-  }
-  if (session.refresh_token && session.refresh_token !== refreshToken) {
-    setCookie(event, 'sb-refresh-token', session.refresh_token, { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+    setCookie(event, 'sb-access-token', refreshData.session.access_token, { path: '/', sameSite: 'lax', maxAge: 60 * 60 });
+    setCookie(event, 'sb-refresh-token', refreshData.session.refresh_token, { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+    user = refreshData.session.user;
   }
 
-  const user = session.user;
+  if (!user) {
+    throw createError({ statusCode: 401, statusMessage: '최종적으로 사용자를 확인할 수 없습니다.' });
+  }
 
-  const supabaseAdmin = createClient(config.public.supabaseUrl, config.supabaseSecretKey);
-
-  const { error } = await supabaseAdmin
+  const { error } = await adminClient
     .from('user_skills')
     .delete()
     .eq('user_id', user.id)
